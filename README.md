@@ -64,6 +64,27 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
+---
+
+## Backend setup (FastAPI)
+
+This repo also contains a Python backend in `backend/`. To start it:
+
+1. Install dependencies (virtualenv/poetry/pipenv etc.)
+2. Make sure MySQL (`care` database) is running (XAMPP default).
+3. Set `DATABASE_URL` if you need non‑default credentials.
+4. Run:
+
+```sh
+cd backend
+uvicorn main:app --reload --port 8000
+```
+
+Tables are created automatically; you can manage migrations with Alembic later.
+
+The API will be available at `http://localhost:8000` and must be reachable by the frontend.
+
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!

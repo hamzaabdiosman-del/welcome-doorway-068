@@ -1,18 +1,50 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Mail, Lock, LogIn } from "lucide-react";
+import { Mail, Lock, LogIn, AlertCircle, CheckCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { loginClient } from "@/lib/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login submitted:", { email, password });
+    setError("");
+
+    if (!email || !password) {
+      setError("Email and password are required");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await loginClient(email, password);
+      console.log("Login successful:", response);
+      // Redirect to home/index page after 1 second
+      setTimeout(() => navigate("/"), 1000);
+    } catch (err: any) {
+      const errorMessage = err.message || "Login failed";
+      console.error("Login error:", errorMessage);
+      if (errorMessage.includes("404") || errorMessage.includes("not found")) {
+        // Client not found - redirect to NotFound
+        setTimeout(() => navigate("/404"), 2000);
+      } else if (errorMessage.includes("401") || errorMessage.includes("Incorrect")) {
+        // Incorrect password - show error
+        setError("Incorrect email or password");
+      } else {
+        setError(errorMessage);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -24,6 +56,12 @@ const Login = () => {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {error && (
+              <Alert className="bg-red-50 border-red-200">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-600">{error}</AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -56,8 +94,10 @@ const Login = () => {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
-            <Button type="submit" className="w-full gap-2">
-              <LogIn className="h-4 w-4" /> Sign In
+            <Button type="submit" className="w-full gap-2" disabled={loading}>
+              {loading ? "Signing in..." : <>
+                <LogIn className="h-4 w-4" /> Sign In
+              </>}
             </Button>
             <p className="text-sm text-muted-foreground">
               Don't have an account?{" "}
